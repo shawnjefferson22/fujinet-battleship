@@ -48,9 +48,18 @@ void showHelpScreen()
 
     resetScreen();
 
-    drawTextAlt(WIDTH / 2 - 14, 1, "how to play FUJI BATTLESHIP");
-    drawLine(WIDTH / 2 - 16, 2, 31);
-    y = 3;
+    if (HEIGHT < 20)        // adjust for smaller screens
+        y = 0;
+    else
+        y = 1;
+    
+    drawTextAlt(WIDTH / 2 - 14, y, "how to play FUJI BATTLESHIP");
+    drawLine(WIDTH / 2 - 16, y+1, 31);
+
+    if (HEIGHT < 20)        // adjust for smaller screens
+        y = 1;
+    else
+        y = 3;
 
     //                 12345678901234567890123456789012
     y++;
@@ -58,7 +67,10 @@ void showHelpScreen()
     y++;
     drawTextAlt(X, y, "sea battle for up to 4 players!");
 
-    y += 3;
+    if (HEIGHT < 20)        // adjust for smaller screens
+        y += 2;
+    else
+        y += 3;
     centerTextAlt(y, "GAME PLAY");
 
     y++;
@@ -74,14 +86,23 @@ void showHelpScreen()
     y++;
     drawTextAlt(X, y, "ENEMY players are attacked.");
 
-    y++;
-    y++;
-    y++;
+
+    if (HEIGHT < 20)        // adjust for smaller screens
+        y += 2;
+    else
+        y += 3;
+    //y++;
+    //y++;
+    //y++;
     drawTextAlt(X, y, "use your strategy and luck to");
     y++;
     drawTextAlt(X, y, "be the last player standing!");
 
-    centerStatusText("press any key to close");
+    #ifdef USE_PLATFORM_SPECIFIC_INPUT
+        centerStatusText("PRESS BUTTON");
+    #else 
+        centerStatusText("press any key to close");
+    #endif
 
     clearCommonInput();
     cgetc();
@@ -250,7 +271,11 @@ void showTableSelectionScreen()
             centerText(12, "no servers are available");
         }
 
-        centerStatusText("Refresh    Help     Name    Quit");
+        #ifdef USE_PLATFORM_SPECIFIC_INPUT
+            platformStatusKeyLegend();
+        #else
+            centerStatusText("Refresh    Help     Name    Quit");
+        #endif
 
 #ifdef COLOR_TOGGLE
         if (prefs.color)

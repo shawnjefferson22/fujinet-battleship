@@ -34,7 +34,7 @@ endef
 
 PRODUCT = fbs
 PRODUCT_UPPER = FBS
-PLATFORMS = coco atari apple2 c64
+PLATFORMS = coco atari apple2 c64 lynx
 
 # Use "make-exp msdos" to build msdos.
 # That version uses fujinet-lib-experimental.

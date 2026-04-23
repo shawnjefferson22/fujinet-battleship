@@ -179,6 +179,12 @@ extern GameState state;
 extern InputStruct input;
 extern PrefsStruct prefs;
 
+// joystick variables
+extern uint8_t _lastJoy;
+extern uint8_t _joy;
+extern uint8_t _joySameCount;
+extern bool _buttonReleased;
+
 // Common local scope temp variables
 
 void pause(uint8_t frames);

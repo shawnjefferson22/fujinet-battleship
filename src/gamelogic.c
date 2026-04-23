@@ -1,8 +1,8 @@
 /*******************************************************************
- * 
- * Do NOT include standard library headers (e.g. conio, std*). 
+ *
+ * Do NOT include standard library headers (e.g. conio, std*).
  * Instead, add to standard_lib.h, which gets included in misc.h
- * 
+ *
  ******************************************************************/
 
 #include "misc.h"
@@ -56,7 +56,7 @@ void processStateChange()
         {
             memcpy(&state.gamefield[i], &clientState.game.players[i].gamefield, 100);
         }
-    } 
+    }
 }
 
 #define READY_LEFT WIDTH / 2 - 8
@@ -69,7 +69,7 @@ void renderLobby()
     if (clientState.game.status != state.prevStatus || state.drawBoard)
     {
         state.drawBoard = false;
-        
+
         // Clear gamefield
         memset(state.gamefield, 0, sizeof(state.gamefield));
 
@@ -207,7 +207,12 @@ void handleShipPlacement()
 
             blink = (blink + 1) & 31;
 
-            readCommonInput();
+            #ifdef USE_PLATFORM_SPECIFIC_INPUT
+			    readCommonInput();
+			#else
+				platform_readCommonInput();
+			#endif
+
             // Move cursor
             if (input.dirX)
             {
@@ -459,7 +464,12 @@ void renderGameboard()
             while (!input.trigger)
             {
                 waitvsync();
-                readCommonInput();
+                #ifdef USE_PLATFORM_SPECIFIC_INPUT
+				    readCommonInput();
+				#else
+					platform_readCommonInput();
+				#endif
+
             }
         }
     }
@@ -522,7 +532,11 @@ bool testShip(uint8_t shipSize, uint8_t pos)
 void processInput()
 {
     waitvsync();
+#ifdef USE_PLATFORM_SPECIFIC_INPUT
     readCommonInput();
+#else
+	platform_readCommonInput();
+#endif
 
     if (state.waitingOnEndGameContinue)
     {
@@ -589,9 +603,9 @@ void waitOnPlayerMove()
         waitvsync();
         if (moved || i != lastFrame)
         {
-            
 
-            // Always show the cursor (do not blink) when moving it around. 
+
+            // Always show the cursor (do not blink) when moving it around.
             // Otherwise, it appears to skip around
             if (moved)
                 lastFrame = 1; // Show cursor frame 1
@@ -635,11 +649,11 @@ void waitOnPlayerMove()
                 // Invalid location
                 soundInvalid();
             }
-            else 
+            else
             {
                 // Attack!
                 soundAttack();
-                
+
                 // Animate attack / clear cursor
                 for (j = 10; j < 16; j++)
                 {
@@ -708,7 +722,12 @@ void waitOnPlayerMove()
         }
 
         // Read input for next iteration
-        readCommonInput();
+        #ifdef USE_PLATFORM_SPECIFIC_INPUT
+		    readCommonInput();
+		#else
+			platform_readCommonInput();
+		#endif
+
     }
 
     // Timed out
@@ -775,6 +794,22 @@ bool inputFieldCycle(uint8_t x, uint8_t y, uint8_t max, char *buffer)
         enableKeySounds();
     }
 
+	#ifdef USE_PLATFORM_SPECIFIC_INPUT
+		input.key = getPlatformKey_inputfield(x, y, (curx == max));
+		if (input.key == KEY_RETURN && curx > 1) {
+			inputField_done = 1;
+			disableKeySounds();
+			return(true);					// end text entry
+        }
+		else if (input.key == KEY_BACKSPACE && curx > 0) {
+			buffer[--curx] = 0;				// we already deleted character on screen
+		}
+		else if (curx < max) {
+			buffer[curx] = input.key;		// set character into buffer
+			buffer[++curx] = 0;
+            drawIcon(x + curx, y, ICON_TEXT_CURSOR);
+		}
+	#else
     // Process any waiting keystrokes
     if (kbhit())
     {
@@ -817,6 +852,7 @@ bool inputFieldCycle(uint8_t x, uint8_t y, uint8_t max, char *buffer)
 
         return inputField_done;
     }
+	#endif
 
     return false;
 }
