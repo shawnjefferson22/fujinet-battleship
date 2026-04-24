@@ -37,6 +37,7 @@ enum fujiDeviceID_t {
   FUJI_DEVICEID_MIDI         = 0x99,
 };
 
+/*
 enum fujiCommandID_t {
   FUJICMD_RESET                      = 0xFF,
   FUJICMD_SPECIAL_QUERY              = 0xFF,
@@ -171,6 +172,14 @@ enum fujiCommandID_t {
   FUJICMD_SEND_RESPONSE              = 0x01,
   FUJICMD_DEVICE_READY               = 0x00,
 };
+*/
+#define FUJICMD_OPEN                  0x4F
+#define FUJICMD_CLOSE                 0x43
+#define FUJICMD_STATUS                0x53
+#define FUJICMD_READ                  0x52
+#define FUJICMD_NAK                   0x15
+#define FUJICMD_ACK                   0x06
+
 
 enum FNIO_ERROR_T {
 	FNIO_ERR_NONE,					// success

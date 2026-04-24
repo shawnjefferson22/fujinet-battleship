@@ -19,8 +19,8 @@ unsigned char *attack_2p_data[6] = {&attack_2p_1_spr[0], &attack_2p_2_spr[0], &a
 unsigned char *attack_4p_data[6] = {&attack_2p_2_spr[0], &attack_2p_2_spr[0], &attack_2p_3_spr[0], &attack_2p_4_spr[0], &attack_2p_4_spr[0], &hit_4p_1_spr[0]};
 unsigned char *hit_2p_data[2] = {&hit_2p_1_spr[0], &hit_2p_2_spr[0]};
 unsigned char *hit_4p_data[2] = {&hit_4p_1_spr[0], &hit_4p_1_spr[0]};
-unsigned char *cursor_2p_data[3] = {&cursor_2p_1_spr[0], &cursor_2p_2_spr[0], &cursor_2p_2_spr[0]};
-unsigned char *cursor_4p_data[3] = {&cursor_4p_1_spr[0], &cursor_4p_2_spr[0], &cursor_4p_2_spr[0]};
+//unsigned char *cursor_2p_data[3] = {&cursor_2p_1_spr[0], &cursor_2p_2_spr[0], &cursor_2p_2_spr[0]};
+//unsigned char *cursor_4p_data[3] = {&cursor_4p_1_spr[0], &cursor_4p_2_spr[0], &cursor_4p_2_spr[0]};
 
 
 SCB_REHV_PAL frame_sprite = {
@@ -31,7 +31,7 @@ SCB_REHV_PAL frame_sprite = {
     NULL,
     0, 0,
     0x0100, 0x0100,
-    { 0xEC, 0x5A, 0x0F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF }
+    { 0xEF, 0x5A, 0x0F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF }
 };
 
 SCB_REHV_PAL ship_sprite = {
@@ -97,7 +97,7 @@ SCB_REHV_PAL player_sprite = {
     (unsigned char *) &player_spr,
     0, 0,
     0x0100, 0x0100,
-    { 0x01, 0x23, 0x45, 0x00, 0x00, 0x00, 0x00, 0x00 }
+    { 0xD0, 0x23, 0x45, 0x00, 0x00, 0x00, 0x00, 0x00 }
 };
 
 SCB_REHV_PAL clock_sprite = {
@@ -108,7 +108,7 @@ SCB_REHV_PAL clock_sprite = {
     (unsigned char *) &clock_spr,
     0, 0,
     0x0100, 0x0100,
-    { 0x01, 0x23, 0x45, 0x00, 0x00, 0x00, 0x00, 0x00 }
+    { 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
 };
 
 SCB_REHV_PAL mark_sprite = {
@@ -119,7 +119,7 @@ SCB_REHV_PAL mark_sprite = {
     (unsigned char *) &mark_spr,
     0, 0,
     0x0100, 0x0100,
-    { 0x01, 0x23, 0x45, 0x00, 0x00, 0x00, 0x00, 0x00 }
+    { 0xF5, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
 };
 
 SCB_REHV_PAL text_cursor_sprite = {
@@ -130,5 +130,16 @@ SCB_REHV_PAL text_cursor_sprite = {
     (unsigned char*) &text_cursor_spr,
     0, 0,
     0x0100, 0x0100,
-    { 0x01, 0x23, 0x45, 0x00, 0x00, 0x00, 0x00, 0x00 }
+    { 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
+};
+
+SCB_REHV_PAL connection_sprite = {
+    BPP_4 | TYPE_NORMAL,
+    REHV,
+    0x01,
+    0,
+    (unsigned char*) &connection_spr,
+    0, 0,
+    0x0100, 0x0100,
+    { 0x02, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
 };

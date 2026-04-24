@@ -20,7 +20,7 @@
 #include "lynxfnio.h"
 
 
-#define RECV_TIMEOUT  10   // timeout for receive loop, in seconds
+#define RECV_TIMEOUT  3   // timeout for receive loop, in seconds
 
 // Global variables
 unsigned char _ck;			// checksum byte

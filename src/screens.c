@@ -1,8 +1,8 @@
 /*******************************************************************
- * 
- * Do NOT include standard library headers (e.g. conio, std*). 
+ *
+ * Do NOT include standard library headers (e.g. conio, std*).
  * Instead, add to standard_lib.h, which gets included in misc.h
- * 
+ *
  ******************************************************************/
 
 #include "misc.h"
@@ -11,7 +11,28 @@
 #include "gamelogic.h"
 
 #define PLAYER_NAME_MAX 8
+// if not defined in platform_specific vars.h
+#ifndef PLAYER_BOX_TOP
 #define PLAYER_BOX_TOP 13
+#endif
+// table of games to join screen locations, over-rdide in platform specific vars.h
+#ifndef TABLE_CHOOSE_Y
+#define TABLE_CHOOSE_Y 4
+#endif
+#ifndef TABLE_TOP
+#define TABLE_TOP 7
+#endif
+#ifndef TABLE_SPACING
+#define TABLE_SPACING 2
+#endif
+#ifndef TABLE_HELLO_Y
+#define TABLE_HELLO	20
+#endif
+#ifndef CONNECTING_Y
+#define CONNECTING_Y 15
+#endif
+
+
 #define REMOVE_PLAYER_KEY '/'
 #define INGAME_MENU_X WIDTH / 2 - 8
 
@@ -52,7 +73,7 @@ void showHelpScreen()
         y = 0;
     else
         y = 1;
-    
+
     drawTextAlt(WIDTH / 2 - 14, y, "how to play FUJI BATTLESHIP");
     drawLine(WIDTH / 2 - 16, y+1, 31);
 
@@ -100,12 +121,17 @@ void showHelpScreen()
 
     #ifdef USE_PLATFORM_SPECIFIC_INPUT
         centerStatusText("PRESS BUTTON");
-    #else 
+    #else
         centerStatusText("press any key to close");
     #endif
 
     clearCommonInput();
-    cgetc();
+
+    #ifdef USE_PLATFORM_SPECIFIC_INPUT
+        getPlatformKey_anykey();
+    #else
+		cgetc();
+    #endif
 }
 
 /// @brief Action called in Welcome Screen to check if a server name is stored in an app key
@@ -145,17 +171,17 @@ void showPlayerNameScreen()
     resetScreen();
     drawLogo();
 
-    centerText(13, "ENTER YOUR NAME");
-    drawBox(WIDTH / 2 - PLAYER_NAME_MAX / 2 - 1, 16, PLAYER_NAME_MAX + 1, 1);
-    drawText(WIDTH / 2 - PLAYER_NAME_MAX / 2, 17, playerName);
+    centerText(PLAYER_BOX_TOP, "ENTER YOUR NAME");
+    drawBox(WIDTH / 2 - PLAYER_NAME_MAX / 2 - 1, PLAYER_BOX_TOP+3, PLAYER_NAME_MAX + 1, 1);
+    drawText(WIDTH / 2 - PLAYER_NAME_MAX / 2, PLAYER_BOX_TOP+4, playerName);
 
     i = (uint8_t)strlen(playerName);
 
     clearCommonInput();
-    while (!inputFieldCycle(WIDTH / 2 - PLAYER_NAME_MAX / 2, 17, PLAYER_NAME_MAX, playerName))
+    while (!inputFieldCycle(WIDTH / 2 - PLAYER_NAME_MAX / 2, PLAYER_BOX_TOP+4, PLAYER_NAME_MAX, playerName))
         ;
 
-    for (y = 13; y < 19; ++y)
+    for (y = PLAYER_BOX_TOP; y < PLAYER_BOX_TOP+5; ++y)
         centerText(y, "                 ");
 
     write_appkey(AK_LOBBY_CREATOR_ID, AK_LOBBY_APP_ID, AK_LOBBY_KEY_USERNAME, strlen(playerName), playerName);
@@ -222,27 +248,28 @@ void showTableSelectionScreen()
     while (strlen(query) == 0)
     {
         // Show names of local player(s)
-
         strcpy(tempBuffer, "HELLO ");
         strcat(tempBuffer, playerName);
-        centerTextAlt(20, tempBuffer);
+        centerTextAlt(TABLE_HELLO_Y, tempBuffer);
 
         if (clientState.tables.count > 0)
         {
             for (i = 0; i < clientState.tables.count; ++i)
             {
-                drawSpace(LMAR, 9 + i * 2, TWID);
+                //drawSpace(LMAR, 9 + i * 2, TWID);
+                drawSpace(LMAR, TABLE_TOP+2 + i * TABLE_SPACING, TWID);
+
             }
         }
         waitvsync();
-        centerText(12, "      refreshing game list..      ");
+        centerText(HEIGHT/2, "      refreshing game list..      ");
 
         drawLogo();
 
-        centerText(4, "choose a game to join");
-        drawText(LMAR, 7, "game");
-        drawText(RMAR - 7, 7, "players");
-        drawLine(LMAR, 8, TWID);
+        centerText(TABLE_CHOOSE_Y, "choose a game to join");
+        drawText(LMAR, TABLE_TOP, "game");
+        drawText(RMAR - 7, TABLE_TOP, "players");
+        drawLine(LMAR, TABLE_TOP+1, TWID);
 
         // waitvsync();
 
@@ -251,11 +278,11 @@ void showTableSelectionScreen()
 
         if (clientState.tables.count > 0)
         {
-            drawSpace(LMAR, 12, TWID);
+            drawSpace(LMAR, HEIGHT/2, TWID);					// erase refreshing game list message
             for (i = 0; i < clientState.tables.count; ++i)
             {
                 table = &clientState.tables.table[i];
-                j = 9 + i * 2;
+                j = TABLE_TOP+2 + i * TABLE_SPACING;
                 drawTextAlt(LMAR, j, table->name);
                 drawTextAlt(RMAR - 5, j, table->players);
 
@@ -268,7 +295,7 @@ void showTableSelectionScreen()
         }
         else
         {
-            centerText(12, "no servers are available");
+            centerText(HEIGHT/2, "no servers are available");
         }
 
         #ifdef USE_PLATFORM_SPECIFIC_INPUT
@@ -295,12 +322,17 @@ void showTableSelectionScreen()
 
             if (clientState.tables.count)
             {
-                drawIcon(LMAR - 2, 9 + tableIndex * 2, blinkCursor < 50 ? ICON_MARK : ICON_MARK_ALT);
+                drawIcon(LMAR - 2, TABLE_TOP+2 + tableIndex * TABLE_SPACING, blinkCursor < 50 ? ICON_MARK : ICON_MARK_ALT);
             }
 
             waitvsync();
             blinkCursor = (blinkCursor + 1) % 60;
-            readCommonInput();
+
+            #ifdef USE_PLATFORM_SPECIFIC_INPUT
+            	platform_readCommonInput();
+            #else
+            	readCommonInput();
+            #endif
 
             if (input.key == 'h' || input.key == 'H')
             {
@@ -314,7 +346,7 @@ void showTableSelectionScreen()
             }
             else if (input.key == 'r' || input.key == 'R')
             {
-                drawBlank(LMAR - 2, 9 + tableIndex * 2);
+                drawBlank(LMAR - 2,  + tableIndex * 2);
                 break;
             }
             else if (input.key == 'c' || input.key == 'C')
@@ -351,7 +383,7 @@ void showTableSelectionScreen()
                 // Visually unselect old table
                 table = &clientState.tables.table[tableIndex];
                 j = table->name[0]; // Reference table so cmoc 0.1.96 optimizer does not corrupt memory
-                j = 9 + tableIndex * 2;
+                j = TABLE_TOP+2 + tableIndex * TABLE_SPACING;
 
                 drawBlank(LMAR - 2, j);
                 drawTextAlt(LMAR, j, table->name);
@@ -364,7 +396,7 @@ void showTableSelectionScreen()
 
                 table = &clientState.tables.table[tableIndex];
                 j = table->name[0]; // Reference table so cmoc 0.1.96 optimizer does not corrupt memory
-                j = 9 + tableIndex * 2;
+                j = TABLE_TOP+2 + tableIndex * TABLE_SPACING;
 
                 drawIcon(LMAR - 2, j, ICON_MARK);
                 drawText(LMAR, j, table->name);
@@ -385,7 +417,7 @@ void showTableSelectionScreen()
 
             // Clear screen and write server name
             resetScreen();
-            centerText(15, clientState.tables.table[tableIndex].name);
+            centerText(CONNECTING_Y, clientState.tables.table[tableIndex].name);
 
             strcpy(query, "?table=");
             strcat(query, clientState.tables.table[tableIndex].table);
@@ -399,8 +431,8 @@ void showTableSelectionScreen()
         }
     }
 
-    centerTextAlt(17, "connecting to server");
-    progressAnim(19);
+    centerTextAlt(CONNECTING_Y+2, "connecting to server");
+    progressAnim(CONNECTING_Y+4);
 
     // Append player name to query
     strcat(query, "&player=");
@@ -440,6 +472,10 @@ void showInGameMenuScreen()
     {
 
         resetScreen();
+
+        #ifdef USE_PLATFORM_SPECIFIC_INPUT
+            platformMenuScreen();
+        #else
         y = HEIGHT / 2 - 3;
         drawTextAlt(INGAME_MENU_X, y, "  Q: quit game");
         drawTextAlt(INGAME_MENU_X, y += 2, "  H: how to play");
@@ -451,6 +487,7 @@ void showInGameMenuScreen()
         drawBox(INGAME_MENU_X - 2, HEIGHT / 2 - 5, 19, y - (HEIGHT / 2 - 5) + 1);
 
         centerTextAlt(HEIGHT - 2, "press TRIGGER/SPACE to close");
+        #endif
 
         // centerTextAlt(y + 6, tempBuffer);
         clearCommonInput();
@@ -458,7 +495,11 @@ void showInGameMenuScreen()
         while (i == 1)
         {
             waitvsync();
-            readCommonInput();
+            #ifdef USE_PLATFORM_SPECIFIC_INPUT
+                platform_readCommonInput();
+            #else
+                readCommonInput();
+            #endif
             if (input.trigger)
             {
                 i = 0;

@@ -5,18 +5,28 @@
 #include <time.h>
 #include <string.h>
 
+#include <unistd.h>
+
 #include "../standard_lib.h"
 #include "../misc.h"
 
+#include "lynxfnio.h"
 #include "drawfont.h"
 #include "sprites.h"
 #include "vars.h"
 
 
+// Screen colors
+#define COLOR_SEA				TGI_COLOR_LIGHTBLUE
+#define COLOR_DRAWER			TGI_COLOR_LIGHTBLUE
+#define COLOR_ACTIVE_PLR		TGI_COLOR_YELLOW
+#define COLOR_INACTIVE_PLR		TGI_COLOR_GREEN
+#define COLOR_LINE				TGI_COLOR_BLUE
+#define COLOR_BOX				TGI_COLOR_RED
 
-unsigned lynx_bg_color;
-unsigned lynx_text_color;
-unsigned lynx_alttext_color;
+unsigned lynx_bg_color;			// black
+unsigned lynx_text_color;		// white
+unsigned lynx_alttext_color;	// yellow
 
 // macros to set penpal in sprites (lo/hi nibble)
 #define SET_LO(x, v)  (((x) & 0xF0) + ((v) & 0x0F))
@@ -33,6 +43,13 @@ unsigned char grid_size;			// grid size, 40 or 50 (x/y dimension)
 unsigned char cell_size;			// cell size, 4 or 5
 unsigned char name_size_y;			// size of name area in frame
 unsigned char lynx_max_players;		// num players in this game
+
+// last cursor position (for clearing the old cursor)
+struct
+{
+	uint8_t x;
+	uint8_t y;
+} last_cursor[4];
 
 // positions of data in pos arrays
 #define PLR_X		0
@@ -59,7 +76,7 @@ unsigned char lynx_max_players;		// num players in this game
 // player positions and offsets for 1-4 players
 uint8_t (*player_pos)[8];
 									//PX, PY, GX, GY, DX, DY, NX, NY
-unsigned char lynx_1p_pos[1][8]	=	{{35, 18, 27, 11,  2, 14, 27, 2}};
+unsigned char lynx_1p_pos[1][8]	=	{{41, 28, 27, 11,  2, 14, 27, 2}};
 
 unsigned char lynx_2p_pos[2][8] =	{{ 0, 18, 27, 11,  2, 14, 27, 2},
 									 {81, 18,  2, 11, 54, 14,  2, 2}};
@@ -77,7 +94,6 @@ unsigned char lynx_4p_pos[4][8] = 	{{ 4, 51, 24,  9,  2, 11, 24, 2 },
 uint8_t	drawer_2p_ship_pos[5][2] = {{2, 3}, { 9, 3}, {16, 3}, {16, 25}, { 9, 30}};
 uint8_t drawer_4p_ship_pos[5][2] = {{2, 2}, { 8, 2}, {14, 2}, {14, 20}, { 8, 24}};
 uint8_t (*drawer_ship_pos)[2];
-
 
 
 // Call to clear the screen
@@ -104,7 +120,6 @@ void drawTextAlt(uint8_t x, uint8_t y, const char *s)
   	uint8_t sx, sy;
 	char c[2];
 
-
 	sy = CHAR_Y_SCR(y);		// initial screen coords
 	sx = CHAR_X_SCR(x);
 	c[1] = '\0';			// null terminate the string
@@ -112,11 +127,13 @@ void drawTextAlt(uint8_t x, uint8_t y, const char *s)
 	while (*s) {
         c[0] = *s;
 
-        outtext_4x6(sx, sy, islower(c[0]) ? lynx_text_color : lynx_alttext_color, lynx_bg_color, c);
+        outtext_4x6(sx, sy, isupper(c[0]) ? lynx_alttext_color : lynx_text_color, lynx_bg_color, c);
 
         sx += FONT_X_SIZE;
         s++;
     }
+
+    tgi_setcolor(lynx_text_color);
 }
 
 /// @brief Draw a single character - used for icons
@@ -130,11 +147,11 @@ void drawIcon(uint8_t x, uint8_t y, uint8_t icon)
 			break;
 		case ICON_MARK:					// arrow next to selection
 			sprite = &mark_sprite;
-			sprite->penpal[0] = SET_LO(ship_sprite.penpal[0], TGI_COLOR_BLACK);
+			sprite->penpal[0] = SET_HI(sprite->penpal[0], TGI_COLOR_WHITE);
 			break;
 		case ICON_MARK_ALT:				// 	flash color of mark sprite
 			sprite = &mark_sprite;
-			sprite->penpal[0] = SET_LO(ship_sprite.penpal[0], TGI_COLOR_RED);
+			sprite->penpal[0] = SET_HI(sprite->penpal[0], TGI_COLOR_RED);
 			break;
 		case ICON_PLAYER:				// icon to denote players in this game
 			sprite = &player_sprite;
@@ -158,7 +175,7 @@ void drawShip(uint8_t quadrant, uint8_t size, uint8_t pos, bool hide)
 	uint8_t rp;
 	uint8_t vert;
 
-	// real position
+	// real position (vertical has added 100)
 	rp = (pos > 99) ? (pos - 100) : pos;
 	vert = (pos > 99);
 
@@ -168,17 +185,17 @@ void drawShip(uint8_t quadrant, uint8_t size, uint8_t pos, bool hide)
 
 	// Erase the ship?
 	if (hide) {
-		tgi_setcolor(TGI_COLOR_LIGHTBLUE);
+		tgi_setcolor(COLOR_SEA);
 		if (vert)
-			tgi_bar(sx, sy, sx+cell_size, sy+(size*cell_size));
+			tgi_bar(sx, sy, sx+cell_size-1, sy+(size*cell_size-1));
 		else
-			tgi_bar(sx, sy, sx+(size*cell_size), sy+cell_size);
+			tgi_bar(sx, sy, sx+(size*cell_size-1), sy+cell_size-1);
 
 		return;
 	}
 
 	// large or small size of grids for ship sprite
-	if (grid_size == GRID_SIZE_34P) {
+	if (grid_size == GRID_SIZE_2P) {
 		if (vert)
 			ship_sprite.data = ship_2p_v_data[size-2];
 		else
@@ -232,32 +249,43 @@ void drawLegendShip(uint8_t player, uint8_t index, uint8_t size, uint8_t status)
 /// @param active whether this is the currently active player
 void drawPlayerName(uint8_t player, const char *name, bool active)
 {
-	uint8_t bg;
+	uint8_t bg, fg;
 
 	// clear name area, make yellow for active, green for not active
-	if (active)
-		bg = TGI_COLOR_YELLOW;
-	else
-		bg = TGI_COLOR_LIGHTGREEN;
+	if (active) {
+		bg = COLOR_ACTIVE_PLR;
+		fg = TGI_COLOR_BLACK;
+	}
+	else {
+		bg = COLOR_INACTIVE_PLR;
+		fg = TGI_COLOR_WHITE;
+	}
 
 	tgi_setcolor(bg);
 	tgi_bar(NAME_X(player), NAME_Y(player), NAME_X(player)+grid_size-1, NAME_Y(player)+name_size_y);
 
 	// draw the name, smaller name area for 3/4 players
 	if (grid_size == GRID_SIZE_2P)
-		outtext_4x6(NAME_X(player)+4, NAME_Y(player)+1, TGI_COLOR_BLACK, TGI_COLOR_TRANSPARENT, name);
+		outtext_4x6(NAME_X(player)+4, NAME_Y(player)+1, fg, TGI_COLOR_TRANSPARENT, name);
 	else
-		outtext_4x6(NAME_X(player)+4, NAME_Y(player), TGI_COLOR_BLACK, TGI_COLOR_TRANSPARENT, name);
+		outtext_4x6(NAME_X(player)+4, NAME_Y(player), fg, TGI_COLOR_TRANSPARENT, name);
 }
 
 /// @brief Draw end game message
 /// @param message
 void drawEndgameMessage(const char *message)
 {
-	// depending on 2p or 3/4p put message at bottom
-	// or in the center
+	uint8_t x;
 
-	outtext_4x6(0, 96, TGI_COLOR_WHITE, TGI_COLOR_BLACK, message);
+	// center the message on the screen
+	x = (WIDTH/2) - (strlen(message)/2);
+
+	// depending on 2p or 3/4p put message at bottom or middle
+	if (grid_size == GRID_SIZE_2P)
+		outtext_4x6(CHAR_X_SCR(x), 96, lynx_text_color, lynx_bg_color, message);
+	else
+		outtext_4x6(CHAR_X_SCR(x), 48, lynx_text_color, lynx_bg_color, message);
+
 }
 
 /// @brief Draw the gamefield for a given player/quadrant
@@ -271,7 +299,7 @@ void drawGamefield(uint8_t quadrant, uint8_t *field)
 
 
 	// clear to sea color
-	tgi_setcolor(TGI_COLOR_LIGHTBLUE);
+	tgi_setcolor(COLOR_SEA);
 	tgi_bar(GRID_X(quadrant), GRID_Y(quadrant), GRID_X(quadrant)+grid_size-1, GRID_Y(quadrant)+grid_size-1);
 
 	// get base xy of quadrant
@@ -320,14 +348,16 @@ void drawGamefieldUpdate(uint8_t quadrant, uint8_t *gamefield, uint8_t attackPos
 	cx = GRID_X(quadrant) + ((attackPos % 10) * cell_size);
 	cy = GRID_Y(quadrant) + ((attackPos / 10) * cell_size);
 
+	// clear to sea color before drawing
+	tgi_setcolor(COLOR_SEA);
+	tgi_bar(cx, cy, cx+cell_size-1, cy+cell_size-1);
+
 	// get the gamefield cell
 	cell = gamefield[attackPos];
-	if (cell == 0)						// sanity check, nothing to draw?
+	// clear cell? already wiped
+	if (cell == 0) {
 		return;
-
-	// clear to sea color
-	tgi_setcolor(TGI_COLOR_LIGHTBLUE);
-	tgi_bar(cx, cy, cx+cell_size-1, cy+cell_size-1);
+	}
 
 	// get correct sprites for grid size
 	if (lynx_max_players < 3) {
@@ -367,6 +397,51 @@ void drawGamefieldUpdate(uint8_t quadrant, uint8_t *gamefield, uint8_t attackPos
 	tgi_sprite(sprite);
 }
 
+void drawUpdateLocation(uint8_t quadrant, uint8_t x, uint8_t y, uint8_t *gamefield)
+{
+	uint8_t cx, cy;
+	uint8_t cell;
+	SCB_REHV_PAL *sprite;
+
+	// calcuate cell screen coords
+	cx = GRID_X(quadrant) + (x * cell_size);
+	cy = GRID_Y(quadrant) + (y * cell_size);
+
+	// clear to sea color before drawing new sprite
+	tgi_setcolor(COLOR_SEA);
+	tgi_bar(cx, cy, cx+cell_size-1, cy+cell_size-1);
+
+	// get the gamefield cell
+	cell = gamefield[(y*10)+x];
+	// only need to clear cell?
+	if (cell == 0) {
+		return;
+	}
+
+	// get correct sprites for grid size
+	if (grid_size == GRID_SIZE_2P) {
+		miss_sprite.data = &miss_2p_spr[0];
+		hit_sprite.data = hit_2p_data[0];
+	}
+	else {
+		miss_sprite.data = &miss_4p_spr[0];
+		hit_sprite.data = hit_4p_data[0];
+	}
+
+	if (cell == FIELD_ATTACK) {
+		sprite = &hit_sprite;
+	}
+	else if (cell == FIELD_MISS)
+		sprite = &miss_sprite;
+	else
+		return;
+
+	// draw the sprite
+	sprite->hpos = cx;
+	sprite->vpos = cy;
+	tgi_sprite(sprite);
+}
+
 /// @brief  Draw the cursor at the specified position on the specified gamefield
 /// @param quadrant     [0-3] player index
 /// @param x    [0-9] cursor x position
@@ -377,43 +452,94 @@ void drawGamefieldCursor(uint8_t quadrant, uint8_t x, uint8_t y, uint8_t *gamefi
 {
 	uint8_t cx, cy;
 
+	// redraw old gamefield location if cursor moved
+	if ((x != last_cursor[quadrant].x) || (y != last_cursor[quadrant].y)) {
+		drawUpdateLocation(quadrant, last_cursor[quadrant].x, last_cursor[quadrant].y, gamefield);
+	}
+
+	// update last cursor location
+	last_cursor[quadrant].x = x;
+	last_cursor[quadrant].y = y;
+
 	// calcuate cell screen coords
 	cx = GRID_X(quadrant) + (x * cell_size);
 	cy = GRID_Y(quadrant) + (y * cell_size);
 
 	// get correct sprites for grid size
 	if (lynx_max_players < 3)
-		cursor_sprite.data = cursor_2p_data[blink];
+		cursor_sprite.data = &cursor_2p_1_spr[0];
 	else
-		cursor_sprite.data = cursor_4p_data[blink];
+		cursor_sprite.data = &cursor_4p_1_spr[0];
 
-	// change color for blink value of 2
-	if (blink == 2)
-		cursor_sprite.penpal[0] = (TGI_COLOR_YELLOW << 4);
-	else
-		//cursor_sprite.penpal[0] = SET_HI(ship_sprite.penpal[0], TGI_COLOR_WHITE);
-		cursor_sprite.penpal[0] = (TGI_COLOR_WHITE << 4);
+	// blink colors
+	switch (blink) {
+		case 0:
+			cursor_sprite.penpal[0] = SET_HI(cursor_sprite.penpal[0], TGI_COLOR_WHITE);
+			break;
+		case 1:
+			cursor_sprite.penpal[0] = SET_HI(cursor_sprite.penpal[0], TGI_COLOR_BLACK);
+			break;
+		case 2:
+			cursor_sprite.penpal[0] = SET_HI(cursor_sprite.penpal[0], TGI_COLOR_YELLOW);
+			break;	
+	}
 
 	// draw the sprite
 	cursor_sprite.hpos = cx;
 	cursor_sprite.vpos = cy;
 	tgi_sprite(&cursor_sprite);
+}
 
-	(void)gamefield;		// avoid compiler error about unused var
+uint8_t lynx_timer_x()
+{
+	if (lynx_max_players < 4)					// 2 and 3 players put timer on right
+		return(WIDTH - TIMER_WIDTH - 1);
+	else
+		return(20 - TIMER_WIDTH - 1);			// else in middle
 }
 
 /// @brief Draw the clock icon at the bottom right of the screen
 void drawClock()
 {
-	// Draw a little clock icon sprite at bottom right
-	// draw at bottom right if 2 player
-	// draw somewhere else if 3/4 player (middle bottom?)
+	uint8_t x, y;
+
+	if (lynx_max_players < 4) {
+		x = WIDTH-2;
+		y = HEIGHT-1;
+	}
+	else {
+		x = 21;
+		y = HEIGHT-1;
+	}
+
+	clock_sprite.hpos = CHAR_X_SCR(x);
+	clock_sprite.vpos = CHAR_Y_SCR(y);
+	tgi_sprite(&clock_sprite);
 }
 
 /// @brief Draw or erase the connection status icon at the bottom left of the screen
 void drawConnectionIcon(bool show)
 {
-	// draw a little connection sprite at bottom left
+	uint8_t x, y;
+
+	if (lynx_max_players < 4) {
+		x = 2;
+		y = 90;
+	}
+	else {
+		x = 74;
+		y = 70;
+	}
+
+	if (show) {
+		connection_sprite.hpos = x;
+		connection_sprite.vpos = y;
+		tgi_sprite(&connection_sprite);
+	}
+	else {
+		tgi_setcolor(lynx_bg_color);
+		tgi_bar(x, y, x+12, y+12);
+	}
 }
 
 /// @brief Draw a single blank space character at given position
@@ -433,19 +559,30 @@ void drawSpace(uint8_t x, uint8_t y, uint8_t w)
 /// @brief Draw a horizontal line of width W characters at location
 void drawLine(uint8_t x, uint8_t y, uint8_t w)
 {
-	tgi_setcolor(lynx_text_color);
+	tgi_setcolor(COLOR_LINE);
 	tgi_line(CHAR_X_SCR(x), CHAR_Y_SCR(y), CHAR_X_SCR(x)+(FONT_X_SIZE * w), CHAR_Y_SCR(y));
 }
 
 /// @brief Draw a box at given location
 void drawBox(uint8_t x, uint8_t y, uint8_t w, uint8_t h)
 {
-    //tgi_setcolor(lynx_fg_color);
-	tgi_line(CHAR_X_SCR(x), CHAR_Y_SCR(y), CHAR_X_SCR(x)+(FONT_X_SIZE * w), CHAR_Y_SCR(y));
-	tgi_lineto(CHAR_X_SCR(x)+(FONT_X_SIZE * w), CHAR_Y_SCR(y)+(FONT_Y_SIZE * h));
-	tgi_lineto(CHAR_X_SCR(x), CHAR_Y_SCR(y)+(FONT_Y_SIZE * h));
-	tgi_lineto(CHAR_X_SCR(x), CHAR_Y_SCR(y));
+ 	// draw the box
+    tgi_setcolor(COLOR_BOX);
+
+    tgi_line(CHAR_X_SCR(x)+3, CHAR_Y_SCR(y)+4, CHAR_X_SCR(x+w)+3, CHAR_Y_SCR(y)+4);     	// top
+    tgi_line(CHAR_X_SCR(x)+3, CHAR_Y_SCR(y+h)+8, CHAR_X_SCR(x+w)+3, CHAR_Y_SCR(y+h)+8);    	// bottom
+    tgi_line(CHAR_X_SCR(x+w)+4, CHAR_Y_SCR(y)+5, CHAR_X_SCR(x+w)+4, CHAR_Y_SCR(y+h)+7);     // right
+    tgi_line(CHAR_X_SCR(x)+2, CHAR_Y_SCR(y)+5, CHAR_X_SCR(x)+2, CHAR_Y_SCR(y+h)+7);     	// left
+
+	// round the edges
+	tgi_setpixel(CHAR_X_SCR(x)+3, CHAR_Y_SCR(y)+5);			// TL
+	tgi_setpixel(CHAR_X_SCR(x+w)+3, CHAR_Y_SCR(y)+5);		// TR
+	tgi_setpixel(CHAR_X_SCR(x+w)+3, CHAR_Y_SCR(y+h)+7);		// BR
+	tgi_setpixel(CHAR_X_SCR(x)+3, CHAR_Y_SCR(y+h)+7);		// BL
+
+    tgi_setcolor(lynx_text_color);
 }
+
 
 /// @brief Draw the main game board layout for the specified number of players
 /// The player count dictates the general layout
@@ -459,19 +596,15 @@ void drawBoard(uint8_t playerCount)
 	lynx_max_players = playerCount;			// record for later
 	switch (playerCount) {
 		case 1:
-			//player_pos = &lynx_1p_pos;
 			player_pos = (uint8_t (*)[8])lynx_1p_pos;
 			break;
 		case 2:
-			//player_pos = &lynx_2p_pos;
 			player_pos = (uint8_t (*)[8])lynx_2p_pos;
 			break;
 		case 3:
-			//player_pos = &lynx_3p_pos;
 			player_pos = (uint8_t (*)[8])lynx_3p_pos;
 			break;
 		case 4:
-			//player_pos = &lynx_4p_pos;
 			player_pos = (uint8_t (*)[8])lynx_4p_pos;
 			break;
 	}
@@ -534,6 +667,8 @@ void restoreScreenBuffer()
 /// @brief Initialize graphics mode
 void initGraphics()
 {
+	uint8_t i;
+
 	// Setup TGI
     tgi_install(tgi_static_stddrv);
     tgi_init();
@@ -543,7 +678,7 @@ void initGraphics()
     joy_install(joy_static_stddrv);
 
     // Init Fujinet - since we don't have Lynx in network-lib yet
-    //fnio_init();
+    fnio_init();
 
     // setup for double buffering
     tgi_setviewpage(0);
@@ -553,12 +688,17 @@ void initGraphics()
 	lynx_bg_color = TGI_COLOR_BLACK;
 	lynx_text_color = TGI_COLOR_WHITE;
 	lynx_alttext_color = TGI_COLOR_YELLOW;
+
+	// set initial cursor
+	for (i=0; i<4; ++i) {
+		last_cursor[i].x = 0;
+		last_cursor[i].y = 0;
+	}
 }
 
 /// @brief Reset graphics mode to default state
 void resetGraphics()
 {
-
 }
 
 /// @brief Wait for vertical sync
@@ -573,17 +713,21 @@ void waitvsync()
 void platformStatusKeyLegend()
 {
 				  			  //0123456789012345678901234567890123456789
-	drawTextAlt(0, HEIGHT - 1, "2: REFRESH  P: HELP  1: COLOR  1+2: NAME");
+	//drawTextAlt(0, HEIGHT - 1, "2: REFRESH  P: HELP  1: COLOR  1+2: NAME");
+
+				  			  						 //0123456789012345678901234567890123456789
+	outtext_4x6(0, 96, TGI_COLOR_BLUE, lynx_bg_color, "2: REFRESH  P: HELP  F: FLIP  1+2: NAME");
+
+
 }
 
-
-void platformMenuKeys()
+void platformMenuScreen()
 {
 	drawBox(8, 4, 24, 8);
 					//0123456789012345678901
-	drawText(10, 6,  "RESTART: QUIT TABLE");
-	drawText(10, 7,  "PAUSE:   HOW TO PLAY");
-	drawText(10, 8,  "OPTION1: CHANGE COLORS");
-  	drawText(10, 9,  "FLIP:    FLIP SCREEN");
-	drawText(10, 11, "OPTION2: KEEP PLAYING");
+	drawText(10, 6,  "RESTART: quit");
+	drawText(10, 7,  "PAUSE:   how to play");
+	drawText(10, 8,  "OPTION1: toggle sound");
+  	drawText(10, 9,  "FLIP:    flip screen");
+	drawText(10, 10, "A:       exit menu");
  }

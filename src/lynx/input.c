@@ -10,7 +10,7 @@
 
 
 #define INPUT_CHARS_NUM     36		// last array index
-const char input_chars[] = {" ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"};
+const char input_chars[] = {" abcdefghijklmnopqrstuvwxyz1234567890"};
 
 unsigned char readJoystick()
 {
@@ -20,7 +20,7 @@ unsigned char readJoystick()
 
 #ifdef USE_PLATFORM_SPECIFIC_INPUT
 
-void getPlatformKey_helpscreen(void)
+void getPlatformKey_anykey(void)
 {
 	unsigned char joy;
 
@@ -54,8 +54,8 @@ int getPlatformKey_screens(void)
 
 	c = cgetc();
 	switch(c) {
-		case '1':					// color
-			return('C');
+		case '1':					// sound toggle
+			return('S');
 		case 'P':					// help
 			return('H');
 		case '2':					// refresh / in-game menu
@@ -84,7 +84,7 @@ int getPlatformKey_inputfield(int8_t x, int8_t y, int8_t at_max)
     i = 0;
 
 	// hack so that backspace works properly
-	drawText(x, y, " ");
+	drawBlank(x, y);
 	drawIcon(x, y, ICON_TEXT_CURSOR);
 
     // keys input
@@ -124,14 +124,14 @@ int getPlatformKey_inputfield(int8_t x, int8_t y, int8_t at_max)
 
 		// B button sends backspace
         if (JOY_BTN_2(joy)) {
-			drawText(x, y, " ");
+			drawBlank(x, y);
             return(KEY_BACKSPACE);
         }
 
 		// Did we change character?
 		if (last != i) {
 			if (i == 0) {
-				drawText(x, y, " ");
+				drawBlank(x, y);
 				drawIcon(x, y, ICON_TEXT_CURSOR);
 			}
 			else {
@@ -186,8 +186,9 @@ void platform_readCommonInput()
         {
             if (JOY_BTN_1(_joy))
             	input.trigger = true;
-            if (JOY_BTN_2(_joy))
+            if (JOY_BTN_2(_joy)) {
             	input.key = 'R';
+			}
 
             if (_buttonReleased)
             {
@@ -202,10 +203,7 @@ void platform_readCommonInput()
         return;
  	}
 
- 	// handle keys
- 	if (!kbhit()) {
-		input.key = cgetc();
-	}
+ 	input.key = getPlatformKey_screens();
 	return;
 }
 

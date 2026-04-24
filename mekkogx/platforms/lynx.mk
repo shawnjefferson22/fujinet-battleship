@@ -1,5 +1,6 @@
 EXECUTABLE = $(R2R_PD)/$(PRODUCT_BASE).lnx
-LIBRARY = $(R2R_PD)/$(PRODUCT_BASE).$(PLATFORM).lib
+#LIBRARY = $(R2R_PD)/$(PRODUCT_BASE).$(PLATFORM).lib
+LIBRARY = 
 
 MWD := $(realpath $(dir $(lastword $(MAKEFILE_LIST)))..)
 include $(MWD)/common.mk

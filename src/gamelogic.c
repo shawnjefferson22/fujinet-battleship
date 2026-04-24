@@ -14,6 +14,27 @@
 #define TIMER_WIDTH 1
 #endif
 
+// screen location defines
+#ifndef PLACE_TEXT_Y
+#define PLACE_TEXT_Y 5
+#endif
+#ifndef PLACE_TEXT_SPACING
+#define PLACE_TEXT_SPACING 2
+#endif
+#ifndef LOBBY_TABLE_TOP
+#define LOBBY_TABLE_TOP 6
+#endif
+#ifndef LOBBY_KEYHELP_Y
+#define LOBBY_KEYHELP_Y (HEIGHT-4)
+#endif
+#ifndef LOBBY_PROMPT_Y
+#define LOBBY_PROMPT_Y (HEIGHT-8)
+#endif
+#ifndef TIMER_X
+#define TIMER_X (WIDTH - TIMER_WIDTH - 2)
+#endif
+
+
 uint8_t posX = 0, posY = 0, inputField_done, validX;
 uint8_t shipPlacements[5] = {0, 0, 0, 0, 0};
 uint8_t shipPlaceIndex = 0;
@@ -77,18 +98,20 @@ void renderLobby()
 
         // Round 0 - Ready Up screen
         drawLogo();
-        centerText(6, clientState.lobby.serverName);
+        centerText(LOBBY_TABLE_TOP, clientState.lobby.serverName);
 
-        drawLine(READY_LEFT, 7, 16);
-        centerTextAlt(HEIGHT - 4, "press " ESCAPE " for menu");
-        centerTextAlt(HEIGHT - 1, "press TRIGGER/SPACE when ready");
+        drawLine(READY_LEFT, LOBBY_TABLE_TOP+1, 16);
+        //centerTextAlt(HEIGHT - 4, "press " ESCAPE " for menu");
+        //centerTextAlt(HEIGHT - 1, "press TRIGGER/SPACE when ready");
+        centerTextAlt(LOBBY_KEYHELP_Y, "press " ESCAPE " for menu");
+        centerTextAlt(LOBBY_KEYHELP_Y+2, "press TRIGGER/SPACE when ready");
 
         // Reset ship placement ahead of next screen
         memset(shipPlacements, 0, sizeof(shipPlacements));
         shipPlaceIndex = 0;
     }
 
-    centerTextWide(HEIGHT - 8, clientState.lobby.prompt);
+    centerTextWide(LOBBY_PROMPT_Y, clientState.lobby.prompt);
 
     if (clientState.lobby.prompt[0] == 's')
     {
@@ -113,26 +136,26 @@ void renderLobby()
     {
         if (i < clientState.lobby.playerCount)
         {
-            drawText(READY_LEFT, 8 + i, clientState.lobby.players[i].name);
+            drawText(READY_LEFT, LOBBY_TABLE_TOP+2 + i, clientState.lobby.players[i].name);
             len = (uint8_t)strlen(clientState.lobby.players[i].name);
             if (len < 8)
             {
-                drawSpace(READY_LEFT + len, 8 + i, 8 - len);
+                drawSpace(READY_LEFT + len, LOBBY_TABLE_TOP+2 + i, 8 - len);
             }
-            drawText(READY_LEFT, 8 + i, clientState.lobby.players[i].name);
+            drawText(READY_LEFT, LOBBY_TABLE_TOP+2 + i, clientState.lobby.players[i].name);
             if (clientState.lobby.players[i].ready)
             {
-                drawTextAlt(READY_LEFT + 11, 8 + i, "ready");
+                drawTextAlt(READY_LEFT + 11, LOBBY_TABLE_TOP+2 + i, "ready");
             }
             else
             {
-                drawSpace(READY_LEFT + 11, 8 + i, 5);
-                drawIcon(READY_LEFT + 11 + ((c + i * 2) % 5), 8 + i, ICON_MARK);
+                drawSpace(READY_LEFT + 11, LOBBY_TABLE_TOP+2 + i, 5);
+                drawIcon(READY_LEFT + 11 + ((c + i * 2) % 5), LOBBY_TABLE_TOP+2 + i, ICON_MARK);
             }
         }
         else if (i < state.prevPlayerCount)
         {
-            drawSpace(READY_LEFT, 8 + i, 16);
+            drawSpace(READY_LEFT, LOBBY_TABLE_TOP+2 + i, 16);
         }
     }
 
@@ -208,9 +231,9 @@ void handleShipPlacement()
             blink = (blink + 1) & 31;
 
             #ifdef USE_PLATFORM_SPECIFIC_INPUT
-			    readCommonInput();
+			    platform_readCommonInput();
 			#else
-				platform_readCommonInput();
+                readCommonInput();				
 			#endif
 
             // Move cursor
@@ -304,8 +327,8 @@ void renderGameboard()
 
         if (clientState.game.status == STATUS_PLACE_SHIPS)
         {
-            centerText(5, "place your five ships");
-            centerTextAlt(7, "press R to rotate");
+            centerText(PLACE_TEXT_Y, "place your five ships");
+            centerTextAlt(PLACE_TEXT_Y+PLACE_TEXT_SPACING, "press R to rotate");
         }
         if (clientState.game.status >= STATUS_GAMESTART)
         {
@@ -467,7 +490,7 @@ void renderGameboard()
                 #ifdef USE_PLATFORM_SPECIFIC_INPUT
 				    readCommonInput();
 				#else
-					platform_readCommonInput();
+					getPlatformKey_anykey();
 				#endif
 
             }
@@ -494,8 +517,8 @@ void renderGameboard()
         }
         if (clientState.game.status == STATUS_PLACE_SHIPS)
         {
-            centerTextWide(5, clientState.game.prompt);
-            centerTextAlt(7, "                   ");
+            centerTextWide(PLACE_TEXT_Y, clientState.game.prompt);
+            centerTextAlt(PLACE_TEXT_Y+PLACE_TEXT_SPACING, "                   ");
         }
     }
     pause(30);
@@ -701,7 +724,8 @@ void waitOnPlayerMove()
                     tempBuffer[0] = ' ';
 
                 itoa(i, tempBuffer + (i < 10), 10);
-                drawTextAlt(WIDTH - TIMER_WIDTH - 2, HEIGHT - 1, tempBuffer);
+                //drawTextAlt(WIDTH - TIMER_WIDTH - 2, HEIGHT - 1, tempBuffer);
+                drawTextAlt(TIMER_X, HEIGHT - 1, tempBuffer);
                 drawClock();
                 soundTick();
             }
@@ -795,19 +819,29 @@ bool inputFieldCycle(uint8_t x, uint8_t y, uint8_t max, char *buffer)
     }
 
 	#ifdef USE_PLATFORM_SPECIFIC_INPUT
-		input.key = getPlatformKey_inputfield(x, y, (curx == max));
-		if (input.key == KEY_RETURN && curx > 1) {
-			inputField_done = 1;
-			disableKeySounds();
-			return(true);					// end text entry
+		inputField_done = 0;
+		input.key = getPlatformKey_inputfield(x+curx, y, (curx == max));
+		if (input.key == KEY_RETURN) {
+			if (curx > 1) {						// names need to be at least two letters?
+				inputField_done = 1;
+				disableKeySounds();
+				return(true);					// end text entry
+			}
+			else
+				return(false);					// do nothing
         }
-		else if (input.key == KEY_BACKSPACE && curx > 0) {
-			buffer[--curx] = 0;				// we already deleted character on screen
+		else if (input.key == KEY_BACKSPACE) {
+			if (curx > 0)
+				buffer[--curx] = 0;				// we already deleted character on screen
+			else
+				buffer[0] = 0;
+			return(false);
 		}
 		else if (curx < max) {
 			buffer[curx] = input.key;		// set character into buffer
 			buffer[++curx] = 0;
             drawIcon(x + curx, y, ICON_TEXT_CURSOR);
+            return(false);
 		}
 	#else
     // Process any waiting keystrokes
@@ -852,7 +886,7 @@ bool inputFieldCycle(uint8_t x, uint8_t y, uint8_t max, char *buffer)
 
         return inputField_done;
     }
-	#endif
 
     return false;
+	#endif
 }

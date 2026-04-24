@@ -51,6 +51,7 @@ extern unsigned char player_spr[];
 extern unsigned char clock_spr[];
 extern unsigned char mark_spr[];
 extern unsigned char text_cursor_spr[];
+extern unsigned char connection_spr[];
 
 // Sprite data arrays
 extern unsigned char *ship_2p_v_data[4];
@@ -75,5 +76,6 @@ extern SCB_REHV_PAL player_sprite;
 extern SCB_REHV_PAL clock_sprite;
 extern SCB_REHV_PAL mark_sprite;
 extern SCB_REHV_PAL text_cursor_sprite;
+extern SCB_REHV_PAL connection_sprite;
 
 #endif

@@ -8,14 +8,14 @@
     .export _attack_2p_1_spr, _attack_2p_2_spr, _attack_2p_3_spr, _attack_2p_4_spr
 ;    .export _attack_4p_1_spr, _attack_4p_2_spr, _attack_4p_3_spr, _attck_4p_4_spr
 
-    .export _cursor_2p_1_spr, _cursor_2p_2_spr
-    .export _cursor_4p_1_spr, _cursor_4p_2_spr
+    .export _cursor_2p_1_spr
+    .export _cursor_4p_1_spr
 
     .export _hit_2p_1_spr, _hit_2p_2_spr
     .export _hit_4p_1_spr;, _hit_4p_2_spr
     .export _miss_2p_spr, _miss_4p_spr
 
-    .export _player_spr, _clock_spr, _mark_spr, _text_cursor_spr
+    .export _player_spr, _clock_spr, _mark_spr, _text_cursor_spr, _connection_spr
 
 
     .rodata
@@ -79,13 +79,8 @@ _attack_2p_4_spr:
 
 _cursor_2p_1_spr:
     .incbin "./sprdata/2p_cursor1.spr"
-_cursor_2p_2_spr:
-    .incbin "./sprdata/2p_cursor2.spr"
-
 _cursor_4p_1_spr:
     .incbin "./sprdata/4p_cursor1.spr"
-_cursor_4p_2_spr:
-    .incbin "./sprdata/4p_cursor2.spr"
 
 _hit_2p_1_spr:
     .incbin "./sprdata/2p_hit1.spr"
@@ -109,3 +104,5 @@ _mark_spr:
     .incbin "./sprdata/mark.spr"
 _text_cursor_spr:
     .incbin "./sprdata/text_cursor.spr"
+_connection_spr:
+    .incbin "./sprdata/connection.spr"
