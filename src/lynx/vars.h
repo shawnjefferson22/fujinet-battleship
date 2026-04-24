@@ -30,7 +30,7 @@ uint8_t lynx_timer_x();
 #define CONNECTING_Y 12
 #define PLACE_TEXT_Y 1
 #define PLACE_TEXT_SPACING 1
-#define TIMER_WIDTH 1
+#define TIMER_WIDTH 2
 #define TIMER_X		lynx_timer_x()
 
 // color globals

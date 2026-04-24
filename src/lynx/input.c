@@ -189,21 +189,15 @@ void platform_readCommonInput()
             if (JOY_BTN_2(_joy)) {
             	input.key = 'R';
 			}
-
-            if (_buttonReleased)
-            {
-                _buttonReleased = false;
-            }
-        }
-        else
-        {
-            _buttonReleased = true;
         }
 
-        return;
+		// debounce joystick
+		if (_joy !=0)
+			while(_joy == readJoystick());
  	}
 
- 	input.key = getPlatformKey_screens();
+	if (input.key == 0)
+ 		input.key = getPlatformKey_screens();
 	return;
 }
 
