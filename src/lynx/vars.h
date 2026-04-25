@@ -20,6 +20,7 @@ uint8_t lynx_timer_x();
 #define WIDTH 40
 #define HEIGHT 17
 #define PLAYER_BOX_TOP 10
+#define PLACE_TEXTPLACE_TEXT_KEY_PROMPT "press B to rotate"
 #define TABLE_CHOOSE_Y 3
 #define TABLE_TOP 5
 #define TABLE_SPACING 1

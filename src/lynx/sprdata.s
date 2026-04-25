@@ -5,7 +5,7 @@
     .export _ship_2p_h2_spr, _ship_2p_h3_spr, _ship_2p_h4_spr, _ship_2p_h5_spr
     .export _ship_4p_h2_spr, _ship_4p_h3_spr, _ship_4p_h4_spr, _ship_4p_h5_spr
 
-    .export _attack_2p_1_spr, _attack_2p_2_spr, _attack_2p_3_spr, _attack_2p_4_spr
+    .export _attack_2p_1_spr, _attack_2p_2_spr, _attack_2p_3_spr, _attack_2p_4_spr, _attack_2p_5_spr
 ;    .export _attack_4p_1_spr, _attack_4p_2_spr, _attack_4p_3_spr, _attck_4p_4_spr
 
     .export _cursor_2p_1_spr
@@ -67,6 +67,8 @@ _attack_2p_3_spr:
     .incbin "./sprdata/2p_attack3.spr"
 _attack_2p_4_spr:
     .incbin "./sprdata/2p_attack4.spr"
+_attack_2p_5_spr:
+    .incbin "./sprdata/2p_attack5.spr"
 
 ;_attack_4p_1_spr:
 ;    .incbin "./sprdata/4p_attack1.spr"

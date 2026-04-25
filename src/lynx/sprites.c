@@ -15,7 +15,7 @@ unsigned char *ship_2p_v_data[4] = {&ship_2p_v2_spr[0], &ship_2p_v3_spr[0], &shi
 unsigned char *ship_2p_h_data[4] = {&ship_2p_h2_spr[0], &ship_2p_h3_spr[0], &ship_2p_h4_spr[0], &ship_2p_h5_spr[0]};
 unsigned char *ship_4p_v_data[4] = {&ship_4p_v2_spr[0], &ship_4p_v3_spr[0], &ship_4p_v4_spr[0], &ship_4p_v5_spr[0]};
 unsigned char *ship_4p_h_data[4] = {&ship_4p_h2_spr[0], &ship_4p_h3_spr[0], &ship_4p_h4_spr[0], &ship_4p_h5_spr[0]};
-unsigned char *attack_2p_data[6] = {&attack_2p_1_spr[0], &attack_2p_2_spr[0], &attack_2p_3_spr[0], &attack_2p_4_spr[0], &attack_2p_4_spr[0], &hit_2p_1_spr[0]};
+unsigned char *attack_2p_data[6] = {&attack_2p_1_spr[0], &attack_2p_2_spr[0], &attack_2p_3_spr[0], &attack_2p_4_spr[0], &attack_2p_4_spr[0], &attack_2p_5_spr[0]};
 unsigned char *attack_4p_data[6] = {&attack_2p_2_spr[0], &attack_2p_2_spr[0], &attack_2p_3_spr[0], &attack_2p_4_spr[0], &attack_2p_4_spr[0], &hit_4p_1_spr[0]};
 unsigned char *hit_2p_data[2] = {&hit_2p_1_spr[0], &hit_2p_2_spr[0]};
 unsigned char *hit_4p_data[2] = {&hit_4p_1_spr[0], &hit_4p_1_spr[0]};
@@ -42,7 +42,7 @@ SCB_REHV_PAL ship_sprite = {
     NULL,
     0, 0,
     0x0100, 0x0100,
-    { 0x11, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
+    { 0x13, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
 };
 
 SCB_REHV_PAL attack_sprite = {

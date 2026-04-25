@@ -328,7 +328,11 @@ void renderGameboard()
         if (clientState.game.status == STATUS_PLACE_SHIPS)
         {
             centerText(PLACE_TEXT_Y, "place your five ships");
-            centerTextAlt(PLACE_TEXT_Y+PLACE_TEXT_SPACING, "press R to rotate");
+
+            #ifndef PLACE_TEXT_KEY_PROMPT
+            #define PLACE_TEXT_KEY_PROMPT "press R to rotate"
+            #endif
+            centerTextAlt(PLACE_TEXT_Y+PLACE_TEXT_SPACING, PLACE_TEXT_KEY_PROMPT);
         }
         if (clientState.game.status >= STATUS_GAMESTART)
         {

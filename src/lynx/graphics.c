@@ -380,6 +380,16 @@ void drawGamefieldUpdate(uint8_t quadrant, uint8_t *gamefield, uint8_t attackPos
 		attack_sprite.penpal[0] = 0x15;
 	}
 
+	if (anim > 9)
+		sprite = &attack_sprite;
+	else if (cell == FIELD_ATTACK)
+		sprite = &hit_sprite;
+	else if (cell == FIELD_MISS)
+		sprite = &miss_sprite;
+	else
+		return;
+
+	/*
 	if (cell == FIELD_ATTACK) {
 		if (anim > 9)
 			sprite = &attack_sprite;
@@ -390,6 +400,7 @@ void drawGamefieldUpdate(uint8_t quadrant, uint8_t *gamefield, uint8_t attackPos
 		sprite = &miss_sprite;
 	else
 		return;
+	*/
 
 	// draw the sprite
 	sprite->hpos = cx;
