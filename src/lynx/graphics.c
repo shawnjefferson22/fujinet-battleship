@@ -354,10 +354,6 @@ void drawGamefieldUpdate(uint8_t quadrant, uint8_t *gamefield, uint8_t attackPos
 
 	// get the gamefield cell
 	cell = gamefield[attackPos];
-	// clear cell? already wiped
-	if (cell == 0) {
-		return;
-	}
 
 	// get correct sprites for grid size
 	if (lynx_max_players < 3) {
@@ -369,15 +365,8 @@ void drawGamefieldUpdate(uint8_t quadrant, uint8_t *gamefield, uint8_t attackPos
 	else {
 		miss_sprite.data = &miss_4p_spr[0];
 		hit_sprite.data = hit_4p_data[anim];
-		if (anim > 9) {
+		if (anim > 9)
 			attack_sprite.data = attack_4p_data[anim-10];
-	}
-
-	// change colors on last attack sprite (to red/yellow for fire)
-	if (anim == 15)
-		attack_sprite.penpal[0] = 0x29;
-	else
-		attack_sprite.penpal[0] = 0x15;
 	}
 
 	if (anim > 9)
@@ -388,19 +377,6 @@ void drawGamefieldUpdate(uint8_t quadrant, uint8_t *gamefield, uint8_t attackPos
 		sprite = &miss_sprite;
 	else
 		return;
-
-	/*
-	if (cell == FIELD_ATTACK) {
-		if (anim > 9)
-			sprite = &attack_sprite;
-		else
-			sprite = &hit_sprite;
-	}
-	else if (cell == FIELD_MISS)
-		sprite = &miss_sprite;
-	else
-		return;
-	*/
 
 	// draw the sprite
 	sprite->hpos = cx;
