@@ -11,7 +11,7 @@
     .export _cursor_4p_1_spr
 
     .export _hit_2p_1_spr, _hit_2p_2_spr
-    .export _hit_4p_1_spr
+    .export _hit_4p_1_spr, _hit_4p_2_spr
     .export _miss_2p_spr, _miss_4p_spr
 
     .export _player_spr, _clock_spr, _mark_spr, _text_cursor_spr, _connection_spr
@@ -69,14 +69,7 @@ _attack_2p_4_spr:
 _attack_2p_5_spr:
     .incbin "./sprdata/2p_attack5.spr"
 
-;_attack_4p_1_spr:
-;    .incbin "./sprdata/4p_attack1.spr"
-;_attack_4p_2_spr:
-;    .incbin "./sprdata/4p_attack2.spr"
-;_attack_4p_3_spr:
-;    .incbin "./sprdata/4p_attack3.spr"
-;_attack_4p_4_spr:
-;    .incbin "./sprdata/4p_attack4.spr"
+; 4p attack sprites are just some of the 2p ones
 
 _cursor_2p_1_spr:
     .incbin "./sprdata/2p_cursor1.spr"
@@ -89,8 +82,8 @@ _hit_2p_2_spr:
     .incbin "./sprdata/2p_hit2.spr"
 _hit_4p_1_spr:
     .incbin "./sprdata/4p_hit1.spr"
-;_hit_4p_2_spr:
-;    .incbin "./sprdata/4p_hit2.spr"
+_hit_4p_2_spr:
+    .incbin "./sprdata/4p_hit2.spr"
 
 _miss_2p_spr:
     .incbin "./sprdata/2p_miss.spr"

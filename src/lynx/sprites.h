@@ -30,10 +30,10 @@ extern unsigned char attack_2p_3_spr[];
 extern unsigned char attack_2p_4_spr[];
 extern unsigned char attack_2p_5_spr[];
 
-extern unsigned char attack_4p_1_spr[];
-extern unsigned char attack_4p_2_spr[];
-extern unsigned char attack_4p_3_spr[];
-extern unsigned char attack_4p_4_spr[];
+//extern unsigned char attack_4p_1_spr[];
+//extern unsigned char attack_4p_2_spr[];
+//extern unsigned char attack_4p_3_spr[];
+//extern unsigned char attack_4p_4_spr[];
 
 extern unsigned char cursor_2p_1_spr[];
 extern unsigned char cursor_2p_2_spr[];

@@ -492,9 +492,9 @@ void renderGameboard()
             {
                 waitvsync();
                 #ifdef USE_PLATFORM_SPECIFIC_INPUT
-				    readCommonInput();
+				    getPlatformKey_anykey();
 				#else
-					getPlatformKey_anykey();
+                    readCommonInput();					
 				#endif
 
             }

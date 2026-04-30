@@ -275,17 +275,23 @@ void drawPlayerName(uint8_t player, const char *name, bool active)
 /// @param message
 void drawEndgameMessage(const char *message)
 {
-	uint8_t x;
+	uint8_t x, y, w;
 
 	// center the message on the screen
 	x = (WIDTH/2) - (strlen(message)/2);
+	w = strlen(message);
 
-	// depending on 2p or 3/4p put message at bottom or middle
 	if (grid_size == GRID_SIZE_2P)
-		outtext_4x6(CHAR_X_SCR(x), 96, lynx_text_color, lynx_bg_color, message);
+		y = 15;
 	else
-		outtext_4x6(CHAR_X_SCR(x), 48, lynx_text_color, lynx_bg_color, message);
+		y = 8;
 
+	// Draw the message in a box
+	tgi_setcolor(lynx_bg_color);
+	tgi_bar(CHAR_X_SCR(x-1)-4, CHAR_Y_SCR(y)-4, CHAR_X_SCR(x-1)+((w+1)*FONT_X_SIZE)+4, CHAR_Y_SCR(y)-4+(FONT_Y_SIZE+8));
+
+	drawBox(x-2, y-1, w+2, 1);
+	outtext_4x6(CHAR_X_SCR(x), CHAR_Y_SCR(y), lynx_text_color, lynx_bg_color, message);
 }
 
 /// @brief Draw the gamefield for a given player/quadrant
@@ -569,7 +575,6 @@ void drawBox(uint8_t x, uint8_t y, uint8_t w, uint8_t h)
 
     tgi_setcolor(lynx_text_color);
 }
-
 
 /// @brief Draw the main game board layout for the specified number of players
 /// The player count dictates the general layout
