@@ -26,6 +26,8 @@ void getPlatformKey_anykey(void)
 
 	// any button or keypress exits
 	while(1) {
+		input.trigger = true;	// set trigger for when we exit
+
 		if (kbhit()) {
 			cgetc();
 			return;
@@ -36,7 +38,7 @@ void getPlatformKey_anykey(void)
             while (joy_read(0) == joy);     // debounce joystick
         }
 
-      	if (JOY_BTN_1(joy) || JOY_BTN_2(joy))
+      	if (JOY_BTN_1(joy) || JOY_BTN_2(joy))  
             return;
 	}
 }
