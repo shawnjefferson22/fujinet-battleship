@@ -288,7 +288,7 @@ void drawEndgameMessage(const char *message)
 
 	// Draw the message in a box
 	tgi_setcolor(lynx_bg_color);
-	tgi_bar(CHAR_X_SCR(x-1)-4, CHAR_Y_SCR(y)-4, CHAR_X_SCR(x-1)+((w+1)*FONT_X_SIZE)+4, CHAR_Y_SCR(y)-4+(FONT_Y_SIZE+8));
+	tgi_bar(CHAR_X_SCR(x-1)-3, CHAR_Y_SCR(y)-3, CHAR_X_SCR(x-1)+((w+1)*FONT_X_SIZE)+4, CHAR_Y_SCR(y)-4+(FONT_Y_SIZE+8));
 
 	drawBox(x-2, y-1, w+2, 1);
 	outtext_4x6(CHAR_X_SCR(x), CHAR_Y_SCR(y), lynx_text_color, lynx_bg_color, message);
